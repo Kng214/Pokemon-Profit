@@ -4,6 +4,11 @@ from decimal import Decimal, ROUND_HALF_UP
 from django.db.models import Sum, F, DecimalField, ExpressionWrapper
 from django.db.models.functions import Coalesce
 
+MONEY_Q = Decimal("0.01")
+
+def money(v) -> Decimal:
+    return (v or Decimal("0")).quantize(MONEY_Q, rounding=ROUND_HALF_UP)
+
 class Card(models.Model):
     name = models.CharField(max_length=100)
     set_name = models.CharField(max_length=255, blank=True, default="")
@@ -25,12 +30,10 @@ class Card(models.Model):
     
     @property
     def current_market_value(self):
-        # 1) If you have manual MarketPrice entries, prefer them
         latest_manual = self.marketprice_set.order_by("-date").first()
-        if latest_manual:
+        if latest_manual and latest_manual.price is not None:
             return money(latest_manual.price)
 
-        # 2) Otherwise fall back to CatalogItem -> PriceSnapshot.market
         if self.catalog_item_id:
             snap = self.catalog_item.prices.order_by("-captured_at").first()
             if snap and snap.market is not None:
@@ -73,12 +76,10 @@ class SealedProduct(models.Model):
 
     @property
     def current_market_value(self):
-        # Prefer manual MarketPrice if you have it
         latest_manual = self.marketprice_set.order_by("-date").first()
-        if latest_manual:
+        if latest_manual and latest_manual.price is not None:
             return money(latest_manual.price * (self.quantity or 0))
 
-        # Otherwise use PriceSnapshot.market from the CatalogItem
         if self.catalog_item_id:
             snap = self.catalog_item.prices.order_by("-captured_at").first()
             if snap and snap.market is not None:
@@ -89,18 +90,12 @@ class SealedProduct(models.Model):
     @property
     def total_spent(self):
         total = self.purchase_set.filter(sealed_product=self).aggregate(
-            total=Coalesce(
-                Sum(ExpressionWrapper(F("quantity") * F("price_each"),
-                   output_field=DecimalField(max_digits=12, decimal_places=2)
-                )),
-                Decimal("0")
-            )
+            total=Coalesce(Sum(self._spent_expr()), Decimal("0"))
         )["total"]
         return money(total)
 
     @property
     def total_sales(self):
-        # If Sale.price is the TOTAL sale amount (recommended), keep this:
         total = self.sale_set.filter(sealed_product=self).aggregate(
             total=Coalesce(Sum("price"), Decimal("0"))
         )["total"]
@@ -109,7 +104,7 @@ class SealedProduct(models.Model):
     @property
     def realized_profit(self):
         return money(self.total_sales - self.total_spent)
-
+    
     @property
     def unrealized_profit(self):
         return money(self.current_market_value - self.total_spent)
@@ -228,7 +223,3 @@ class PriceSnapshot(models.Model):
             models.UniqueConstraint(fields=["item", "captured_at"], name="uniq_item_captured_at")
         ]
 
-MONEY_Q = Decimal("0.01")
-
-def money(v: Decimal) -> Decimal:
-    return (v or Decimal("0")).quantize(MONEY_Q, rounding=ROUND_HALF_UP)
