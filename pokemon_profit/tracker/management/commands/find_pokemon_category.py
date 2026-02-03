@@ -17,14 +17,11 @@ class Command(BaseCommand):
         for cid in range(start, end + 1):
             try:
                 data = get_expansions(cid)
-
-                # data shape unknown; try common patterns:
                 expansions = None
                 if isinstance(data, dict):
                     expansions = data.get("expansions") or data.get("results") or data.get("data")
 
                 if expansions and isinstance(expansions, list) and len(expansions) > 0:
-                    # Heuristic: print a preview and stop.
                     sample = expansions[0]
                     self.stdout.write(self.style.SUCCESS(
                         f"Found categoryId={cid} with {len(expansions)} expansions. Sample: {str(sample)[:200]}"
@@ -35,7 +32,6 @@ class Command(BaseCommand):
                     return
 
             except Exception:
-                # ignore 404/empty/bad ids
                 continue
 
         self.stdout.write(self.style.ERROR("No categoryId found in that range. Try a larger range."))

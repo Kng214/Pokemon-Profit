@@ -8,6 +8,15 @@ class Card(models.Model):
     condition = models.CharField(max_length = 20, blank=True)
     tcgapis_group_id = models.IntegerField(null=True, blank=True)
     tcgapis_product_id = models.IntegerField(null=True, blank=True)
+    ptcg_id = models.CharField(max_length=50, blank=True, null=True, db_index=True)
+    ptcg_set_id = models.CharField(max_length=50, blank=True, null=True, db_index=True)
+    ptcg_set_name = models.CharField(max_length=200, blank=True, null=True)
+    ptcg_number = models.CharField(max_length=20, blank=True, null=True)
+    ptcg_rarity = models.CharField(max_length=80, blank=True, null=True)
+    ptcg_image_small = models.URLField(blank=True, null=True)
+    ptcg_image_large = models.URLField(blank=True, null=True)
+    catalog = models.ForeignKey("CardCatalog", null=True, blank=True, on_delete=models.SET_NULL)
+    catalog_id_str = models.CharField(max_length=80, blank=True, null=True)
     
     def __str__(self):
         return f"{self.name} ({self.set_name})"
@@ -112,3 +121,31 @@ class MarketPrice(models.Model):
     def __str__(self):
         item = self.card or self.sealed_product
         return f"{item} @ {self.price} ({self.source})"
+
+class TcgApisCardIndex(models.Model):
+    group_id = models.IntegerField(db_index=True)
+    number = models.CharField(max_length=20, db_index=True)  # "199"
+    product_id = models.IntegerField()
+    name = models.CharField(max_length=255, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("group_id", "number")
+        
+class CardCatalog(models.Model):
+    # Stable identity from dataset
+    catalog_id = models.CharField(max_length=80, unique=True)  # e.g. "sv3pt5-199" style id (varies by dataset)
+
+    name = models.CharField(max_length=255)
+    set_id = models.CharField(max_length=80, db_index=True)
+    set_name = models.CharField(max_length=255, db_index=True)
+    number = models.CharField(max_length=20, db_index=True)  # "199"
+    rarity = models.CharField(max_length=100, blank=True, null=True)
+    image_small = models.URLField(blank=True, null=True)
+    image_large = models.URLField(blank=True, null=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["set_id", "number"]),
+            models.Index(fields=["set_name", "number"]),
+        ]

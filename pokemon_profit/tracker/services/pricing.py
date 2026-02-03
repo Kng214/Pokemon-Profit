@@ -1,62 +1,76 @@
+import os
 import time
 import requests
 import certifi
-from django.conf import settings
+from dotenv import load_dotenv
 
-BASE_URL = "https://api.pokemontcg.io/v2/cards"
+load_dotenv()
 
-def fetch_card_price(card_name: str, set_name: str = "", card_number: str = ""):
-    headers = {}
-    if getattr(settings, "POKEMONTCG_API_KEY", None):
-        headers["X-Api-Key"] = settings.POKEMONTCG_API_KEY
+BASE = "https://api.tcgapis.com/api/v1"
+API_KEY = os.getenv("TCGAPIS_API_KEY")
 
-    parts = [f'name:"{card_name}"']
-    if set_name:
-        parts.append(f'set.name:"{set_name}"')
-    if card_number:
-        num = card_number.split("/")[0].strip()
-        if num:
-            parts.append(f'number:"{num}"')
-    q = " ".join(parts)
+class RateLimitError(Exception):
+    pass
 
-    params = {"q": q, "pageSize": 1}
+def _headers():
+    if not API_KEY:
+        raise RuntimeError("Missing TCGAPIS_API_KEY in .env")
+    return {"x-api-key": API_KEY}
 
-    # Retry settings
-    attempts = 3
-    timeout_seconds = 45
+def fetch_price_by_product_id(product_id: int, *, max_wait_seconds: int = 60) -> float | None:
+    """
+    Fetch a single market price from TCGAPIs using the fast endpoint:
+      GET /api/v1/prices/{productId}
 
-    last_exc = None
-    for i in range(attempts):
-        try:
-            resp = requests.get(
-                BASE_URL,
-                headers=headers,
-                params=params,
-                timeout=timeout_seconds,
-                verify=certifi.where(),
-            )
-            resp.raise_for_status()
-            data = resp.json()
+    Returns a float (best guess market price), or None if no price found.
+    Raises RateLimitError if rate limit persists beyond max_wait_seconds.
+    """
+    url = f"{BASE}/prices/{int(product_id)}"
 
-            cards = data.get("data", [])
-            if not cards:
-                return None
+    backoff = 2.0
+    waited = 0.0
 
-            card = cards[0]
-            tcgplayer = card.get("tcgplayer") or {}
-            prices = tcgplayer.get("prices") or {}
+    while True:
+        resp = requests.get(
+            url,
+            headers=_headers(),
+            timeout=20,
+            verify=certifi.where(),
+        )
 
-            for variant in ["holofoil", "normal", "reverseHolofoil", "1stEditionHolofoil", "1stEditionNormal"]:
-                p = prices.get(variant)
-                if isinstance(p, dict):
-                    return p.get("market") or p.get("mid") or p.get("low")
-
-            return None
-
-        except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
-            last_exc = e
-            # exponential-ish backoff: 2s, 4s, 6s
-            time.sleep(2 * (i + 1))
+        # rate limited
+        if resp.status_code == 429:
+            if waited >= max_wait_seconds:
+                raise RateLimitError(f"429 persisted > {max_wait_seconds}s for productId={product_id}")
+            time.sleep(backoff)
+            waited += backoff
+            backoff = min(backoff * 2, 15.0)
             continue
 
-    return None
+        resp.raise_for_status()
+        data = resp.json()
+
+        # TCGAPIs responses vary; handle a few common shapes safely
+        # Example possibilities:
+        # {success:true, data:{prices:[{marketPrice:...}]}}
+        # {success:true, data:{price:{market:...}}}
+        d = data.get("data") or {}
+
+        # try list form
+        prices = d.get("prices")
+        if isinstance(prices, list) and prices:
+            p0 = prices[0] or {}
+            for key in ("marketPrice", "market", "price", "midPrice"):
+                val = p0.get(key)
+                if isinstance(val, (int, float)):
+                    return float(val)
+
+        # try dict form
+        price_obj = d.get("price") or d.get("pricing") or {}
+        if isinstance(price_obj, dict):
+            for key in ("market", "marketPrice", "price", "mid"):
+                val = price_obj.get(key)
+                if isinstance(val, (int, float)):
+                    return float(val)
+
+        return None

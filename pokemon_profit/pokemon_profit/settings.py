@@ -30,6 +30,7 @@ ALLOWED_HOSTS = []
 
 load_dotenv()
 TCGAPIS_API_KEY = os.getenv("TCGAPIS_API_KEY")
+POKEMONTCG_API_KEY = os.getenv("POKEMONTCG_API_KEY", "")
 
 # Application definition
 
