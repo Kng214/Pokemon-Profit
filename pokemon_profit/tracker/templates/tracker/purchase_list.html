@@ -1,0 +1,29 @@
+{% extends "tracker/base.html" %}
+{% block title %}Purchases{% endblock %}
+
+{% block content %}
+  <h1>Purchases</h1>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th><th>Item</th><th>Qty</th><th>Price Each</th><th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in purchases %}
+          <tr>
+            <td>{{ p.date }}</td>
+            <td>{{ p.card|default:p.sealed_product }}</td>
+            <td>{{ p.quantity }}</td>
+            <td>${{ p.price_each|floatformat:2 }}</td>
+            <td>${{ p.total_price|floatformat:2 }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5">No purchases yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

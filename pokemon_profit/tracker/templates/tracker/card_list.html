@@ -1,0 +1,34 @@
+{% extends "tracker/base.html" %}
+{% block title %}Cards{% endblock %}
+
+{% block content %}
+  <h1>Cards</h1>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th><th>Set</th><th>#</th><th>Printing</th>
+          <th>Market</th><th>Spent</th><th>Sales</th><th>Realized</th><th>Unrealized</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in cards %}
+          <tr>
+            <td>{{ c.name }}</td>
+            <td>{{ c.set_name }}</td>
+            <td>{{ c.card_number }}</td>
+            <td>{{ c.printing }}</td>
+            <td>${{ c.current_market_value }}</td>
+            <td>${{ c.total_spent }}</td>
+            <td>${{ c.total_sales }}</td>
+            <td>${{ c.realized_profit }}</td>
+            <td>${{ c.unrealized_profit }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="9">No cards yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

@@ -1,0 +1,98 @@
+/* -------- Base Layout -------- */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #0b0f14;
+  color: #e8eef6;
+}
+
+a {
+  color: #8ab4ff;
+  text-decoration: none;
+}
+
+h1, h2, h3 {
+  margin-top: 0;
+}
+
+/* -------- Navigation -------- */
+.nav {
+  display: flex;
+  gap: 14px;
+  padding: 14px 18px;
+  background: #121a24;
+  align-items: center;
+}
+
+.nav .spacer {
+  flex: 1;
+}
+
+.nav a {
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+.nav a:hover {
+  background: #1e2a3a;
+}
+
+/* -------- Containers -------- */
+.container {
+  padding: 18px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.card {
+  background: #121a24;
+  border: 1px solid #1e2a3a;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+/* -------- Tables -------- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 10px;
+  border-bottom: 1px solid #1e2a3a;
+  text-align: left;
+}
+
+th {
+  color: #aab4c4;
+}
+
+/* -------- Forms -------- */
+input, select {
+  padding: 10px;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #1e2a3a;
+  background: #0b0f14;
+  color: #e8eef6;
+}
+
+button {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 0;
+  background: #2c6dfc;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+/* -------- Grid -------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}

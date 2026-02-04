@@ -1,0 +1,52 @@
+{% extends "tracker/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1>Dashboard</h1>
+
+<!-- Top row: counts -->
+<div class="grid">
+  <div class="card">
+    <h3>Cards</h3>
+    <p>{{ cards_count }}</p>
+    <a href="{% url 'card_list' %}">View Cards</a>
+  </div>
+
+  <div class="card">
+    <h3>Sealed</h3>
+    <p>{{ sealed_count }}</p>
+    <a href="{% url 'sealed_list' %}">View Sealed</a>
+  </div>
+
+  <div class="card">
+    <h3>Purchases</h3>
+    <p>{{ purchases_count }}</p>
+    <a href="{% url 'purchase_list' %}">View Purchases</a>
+  </div>
+
+  <div class="card">
+    <h3>Sales</h3>
+    <p>{{ sales_count }}</p>
+    <a href="{% url 'sale_list' %}">View Sales</a>
+  </div>
+</div>
+
+<!-- Second row: money summary -->
+<div class="grid" style="margin-top: 20px;">
+  <div class="card">
+    <h3>Total Spent</h3>
+    <p>${{ total_spent }}</p>
+  </div>
+
+  <div class="card">
+    <h3>Total Sales</h3>
+    <p>${{ total_sales }}</p>
+  </div>
+
+  <div class="card">
+    <h3>Realized Profit</h3>
+    <p>${{ realized_profit }}</p>
+  </div>
+</div>
+{% endblock %}
