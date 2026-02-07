@@ -1,0 +1,17 @@
+{% extends "tracker/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+  <h1>{{ title }}</h1>
+
+  <div class="card">
+    <p>Are you sure you want to delete:</p>
+    <p><strong>{{ object }}</strong></p>
+
+    <form method="post" style="margin-top: 14px;">
+      {% csrf_token %}
+      <button type="submit">Yes, delete</button>
+      <a href="{% url cancel_url %}" style="margin-left: 12px;">Cancel</a>
+    </form>
+  </div>
+{% endblock %}

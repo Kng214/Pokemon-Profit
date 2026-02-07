@@ -2,13 +2,21 @@
 {% block title %}Purchases{% endblock %}
 
 {% block content %}
-  <h1>Purchases</h1>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+    <h1>Purchases</h1>
+    <a class="btn" href="{% url 'purchase_create' %}">+ Add Purchase</a>
+  </div>
 
   <div class="card">
     <table>
       <thead>
         <tr>
-          <th>Date</th><th>Item</th><th>Qty</th><th>Price Each</th><th>Total</th>
+          <th>Date</th>
+          <th>Item</th>
+          <th>Qty</th>
+          <th>Price Each</th>
+          <th>Total</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -19,6 +27,12 @@
             <td>{{ p.quantity }}</td>
             <td>${{ p.price_each|floatformat:2 }}</td>
             <td>${{ p.total_price|floatformat:2 }}</td>
+            <td>
+              <div class="actions">
+                <a class="btn" href="{% url 'purchase_edit' p.id %}">Edit</a>
+                <a class="btn btn-danger" href="{% url 'purchase_delete' p.id %}">Delete</a>
+              </div>
+            </td>
           </tr>
         {% empty %}
           <tr><td colspan="5">No purchases yet.</td></tr>

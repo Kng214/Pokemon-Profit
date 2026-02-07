@@ -66,7 +66,11 @@ class SealedProduct(models.Model):
         null=True, blank=True,
         on_delete=models.SET_NULL
     )
-
+    def __str__(self):
+        if self.set_name:
+            return f"{self.name} ({self.set_name})"
+        return self.name
+    
     def _spent_expr(self):
         return ExpressionWrapper(
             F("quantity") * F("price_each"),

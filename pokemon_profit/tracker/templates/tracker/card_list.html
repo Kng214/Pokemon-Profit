@@ -2,14 +2,25 @@
 {% block title %}Cards{% endblock %}
 
 {% block content %}
-  <h1>Cards</h1>
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <h1>Cards</h1>
+    <a class="btn" href="{% url 'card_create' %}">+ Add Card</a>
+  </div>
 
   <div class="card">
     <table>
       <thead>
         <tr>
-          <th>Name</th><th>Set</th><th>#</th><th>Printing</th>
-          <th>Market</th><th>Spent</th><th>Sales</th><th>Realized</th><th>Unrealized</th>
+          <th>Name</th>
+          <th>Set</th>
+          <th>#</th>
+          <th>Printing</th>
+          <th>Market</th>
+          <th>Spent</th>
+          <th>Sales</th>
+          <th>Realized</th>
+          <th>Unrealized</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -24,6 +35,12 @@
             <td>${{ c.total_sales }}</td>
             <td>${{ c.realized_profit }}</td>
             <td>${{ c.unrealized_profit }}</td>
+            <td>
+              <div class="actions">
+                <a class="btn" href="{% url 'card_edit' c.id %}">Edit</a>
+                <a class="btn btn-danger" href="{% url 'card_delete' c.id %}">Delete</a>
+              </div>
+            </td>
           </tr>
         {% empty %}
           <tr><td colspan="9">No cards yet.</td></tr>
